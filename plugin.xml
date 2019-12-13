@@ -34,7 +34,6 @@
         <source-file src="src/ios/GMPicker/ProgressViewController.m" />
         <resource-file src="src/ios/GMPicker/GMEmptyFolder@1x.png" />
         <resource-file src="src/ios/GMPicker/GMEmptyFolder@2x.png" />
-        <resource-file src="src/ios/GMPicker/GMImagePicker.strings" />
         <resource-file src="src/ios/GMPicker/GMSelected.png" />
         <resource-file src="src/ios/GMPicker/GMSelected@2x.png" />
         <resource-file src="src/ios/GMPicker/GMVideoIcon.png" />

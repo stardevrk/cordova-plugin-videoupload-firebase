@@ -1,18 +1,15 @@
 #import <Foundation/Foundation.h>
 #import <Cordova/CDVPlugin.h>
 
-#import <Filestack/Filestack.h>
-#import <FSPicker/FSPicker.h>
+#import "GMImagePickerController.h"
 
-@interface VideoUpload : CDVPlugin <FSPickerDelegate>
+@interface VideoUpload : CDVPlugin <GMImagePickerControllerDelegate>
 
 @property(nonatomic, copy) NSString* actionCallbackId;
-@property(nonatomic, copy) NSString* keyCallbackId;
-@property(nonatomic, copy) NSString* nameCallbackId;
 
-- (void)setKey:(CDVInvokedUrlCommand*)command;
+@property(nonatomic, copy) GMImagePickerController* picker;
 
-- (void)select:(CDVInvokedUrlCommand*)command;
+- (void)init:(CDVInvokedUrlCommand*)command;
 
 - (void)startUpload:(CDVInvokedUrlCommand*)command;
 

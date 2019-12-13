@@ -48,7 +48,7 @@
  - (void)assetsPickerController:(GMImagePickerController *)picker didFinishUpload:(NSString *)downloadURL
  {
      [self.viewController dismissViewControllerAnimated:YES completion:nil];
-     
+     NSLog(@"Result Download URL == %@", downloadURL);
      if (downloadURL.length == 0) {
          NSLog(@"Upload was failed.");
          [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"cancelled"] callbackId:self.actionCallbackId];

@@ -33,7 +33,15 @@
         [FIRApp configure];
         _selectedAssets = [[NSMutableArray alloc] init];
         
+        //Remove Temp file
+        NSArray *paths = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
+        NSURL *documentsURL = [paths lastObject];
         
+        NSURL *finalUploading = [[NSURL alloc] initWithString: [[NSString alloc] initWithFormat:@"%@/temp", documentsURL.absoluteString]];
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        if ([fileManager fileExistsAtPath:[finalUploading path]]){
+            [fileManager removeItemAtPath:[finalUploading path] error:nil];
+        }
         
         // Default values:
         _displaySelectionInfoToolbar = YES;
@@ -60,9 +68,10 @@
         //_customSmartCollections=nil;
         
         // Which media types will display
-        _mediaTypes = @[@(PHAssetMediaTypeAudio),
-                        @(PHAssetMediaTypeVideo),
-                        @(PHAssetMediaTypeImage)];
+//        _mediaTypes = @[@(PHAssetMediaTypeAudio),
+//                        @(PHAssetMediaTypeVideo),
+//                        @(PHAssetMediaTypeImage)];
+        _mediaTypes = @[@(PHAssetMediaTypeVideo)];
         
         self.preferredContentSize = kPopoverContentSize;
         
@@ -84,7 +93,7 @@
         
         _pickerStatusBarStyle = UIStatusBarStyleDefault;
         
-        _progressController = [[ProgressViewController alloc] init];
+        
         _albumsController = [[GMAlbumsViewController alloc] init];
         
         
@@ -92,6 +101,9 @@
         _toBeUploaded = [[NSURL alloc] init];
         _resultURL = [[NSString alloc] initWithString:@""];
         _uploadPath = [[NSString alloc] initWithString:@""];
+        
+        FIRStorage *storage = [FIRStorage storage];
+        _storageRef = [storage reference];
         
         [self setupNavigationController];
         
@@ -169,10 +181,10 @@
         
         if(err != nil) {
             NSLog(@"Local Copy is disabled !!!%@", err.localizedDescription);
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.confirm.title",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"Low Memory?")]
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Low Memory?"]
                 message:@"Your phone does not have enough memory for temp file"
                 preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction *okAction = [UIAlertAction actionWithTitle:[NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.action.no",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"OK")]
+            UIAlertAction *okAction = [UIAlertAction actionWithTitle:[NSString stringWithFormat:@"OK"]
                 style:UIAlertActionStyleDefault handler:^(UIAlertAction * action){
                 // Ok action example
             }];
@@ -181,9 +193,13 @@
             return;
         }
          
+            self.progressController = [[ProgressViewController alloc] init];
              self.progressController.view.backgroundColor = [UIColor colorWithWhite:4 alpha:0.8f];
             self.progressController.modalPresentationStyle = UIModalPresentationOverCurrentContext;
             [self presentViewController:self.progressController animated:YES completion:nil];
+        
+//            [self.progressController setProgress:[[NSNumber alloc] initWithDouble:0.0]];
+        
         
          NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
         // NSTimeInterval is defined as double
@@ -206,6 +222,10 @@
                 NSURL *downloadURL = URL;
                   NSLog(@"Upload Succeeded with URL ---- %@", downloadURL.absoluteString);
                   self.resultURL = [[NSString alloc] initWithString:documentsURL.absoluteString];
+                  dispatch_async(dispatch_get_main_queue(), ^(void) {
+                      [self.progressController dismissViewControllerAnimated:YES completion:nil];
+                      [self finishPickingAssets:self];
+                  });
               }
             }];
           }
@@ -229,10 +249,7 @@
             if ([fileManager fileExistsAtPath:[finalUploading path]]){
                 [fileManager removeItemAtPath:[finalUploading path] error:nil];
             }
-            dispatch_async(dispatch_get_main_queue(), ^(void) {
-                [self.progressController dismissViewControllerAnimated:YES completion:nil];
-                [self finishPickingAssets:self];
-            });
+            
             
 
         }];
@@ -301,16 +318,16 @@
     
     if (!self.allowsMultipleSelection) {
         if (self.confirmSingleSelection) {
-            NSString *message = self.confirmSingleSelectionPrompt ? self.confirmSingleSelectionPrompt : [NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.confirm.message",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"Do you want to upload video you tapped on? Upload Task will be continued in Background.")];
+            NSString *message = self.confirmSingleSelectionPrompt ? self.confirmSingleSelectionPrompt : [NSString stringWithFormat:@"Do you want to upload video you tapped on? Upload Task will be continued in Background."];
             
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.confirm.title",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"Upload Ready?")]
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat: @"Upload Ready?"]
                 message:message
                 preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction *okAction = [UIAlertAction actionWithTitle:[NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.action.no",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"No")]
+            UIAlertAction *okAction = [UIAlertAction actionWithTitle:[NSString stringWithFormat:@"No"]
                 style:UIAlertActionStyleDefault handler:^(UIAlertAction * action){
                 // Ok action example
             }];
-            UIAlertAction *otherAction = [UIAlertAction actionWithTitle:[NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.action.yes",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"Yes")]
+            UIAlertAction *otherAction = [UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Yes"]
                 style:UIAlertActionStyleDefault handler:^(UIAlertAction * action){
                 // Other action
                 PHAsset *firstAsset = [self.selectedAssets objectAtIndex:0];
@@ -433,15 +450,15 @@
     NSInteger nVideos = [self.selectedAssets filteredArrayUsingPredicate:videoPredicate].count;
     
     if (nImages > 0 && nVideos > 0) {
-        return [NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.selection.multiple-items",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"%@ Items Selected" ), @(nImages + nVideos)];
+        return [NSString stringWithFormat:@"%@ Items Selected", @(nImages + nVideos)];
     } else if (nImages > 1) {
-        return [NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.selection.multiple-photos",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"%@ Photos Selected"), @(nImages)];
+        return [NSString stringWithFormat:@"%@ Photos Selected", @(nImages)];
     } else if (nImages == 1) {
-        return NSLocalizedStringFromTableInBundle(@"picker.selection.single-photo",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"1 Photo Selected" );
+        return @"1 Photo Selected";
     } else if (nVideos > 1) {
-        return [NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.selection.multiple-videos",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"%@ Videos Selected"), @(nVideos)];
+        return [NSString stringWithFormat:@"%@ Videos Selected", @(nVideos)];
     } else if (nVideos == 1) {
-        return NSLocalizedStringFromTableInBundle(@"picker.selection.single-video",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"1 Video Selected");
+        return @"1 Video Selected";
     } else {
         return nil;
     }

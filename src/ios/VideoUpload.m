@@ -13,7 +13,7 @@
     _picker.title = @"Albums";
     _picker.customDoneButtonTitle = @"Finished";
     _picker.customCancelButtonTitle = @"Cancel";
-    _picker.customNavigationBarPrompt = @"Take a new photo or select an existing one!";
+    _picker.customNavigationBarPrompt = @"";
     
     _picker.colsInPortrait = 3;
     _picker.colsInLandscape = 5;

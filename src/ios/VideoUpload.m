@@ -28,12 +28,7 @@
 
 - (void)startUpload:(CDVInvokedUrlCommand*)command {
     self.actionCallbackId = command.callbackId;
-    
-    NSString *path = [command.arguments objectAtIndex:0];
-    if (path && ![path isEqual:[NSNull null]]) {
-        _picker.uploadPath = [[NSString alloc] initWithString:path];
-    }
-        
+           
     [self.commandDelegate runInBackground:^{
         dispatch_async(dispatch_get_main_queue(), ^{
           [self.viewController presentViewController:self.picker animated:YES completion:nil];

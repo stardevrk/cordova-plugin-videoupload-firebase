@@ -17,8 +17,8 @@ var VideoUpload = {
     init:function() {
         exec(function() {}, function() {}, 'VideoUpload', 'init', []);
     },
-    startUpload:function(storeOption, successCB, errorCB) {
-        exec(successCB, errorCB, 'VideoUpload', 'startUpload', parseStoreArgs(storeOption));
+    startUpload:function(successCB, errorCB) {
+        exec(successCB, errorCB, 'VideoUpload', 'startUpload', []);
     }
 };
 
